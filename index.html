@@ -619,10 +619,7 @@ Promise.all(CHUNKS.map(f=>fetch(f).then(r=>r.ok?r:fetch(f.split("/").pop())).the
   new MutationObserver(function(){ protect(); }).observe(document.documentElement, {childList:true, subtree:true});
   document.addEventListener('DOMContentLoaded', protect); protect();
 
-  // Keep the browser tab title as it is
-  var origTitle = document.title;
-  new MutationObserver(function(){ if (document.title !== origTitle) document.title = origTitle; })
-    .observe(document.querySelector('title') || document.head, {childList:true, characterData:true, subtree:true});
+  document.title = 'Factorial · Catálogo de cursos';
 
   setCookie('/en/' + TARGET);
   var st = document.createElement('style');
