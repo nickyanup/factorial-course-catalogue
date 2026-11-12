@@ -297,7 +297,7 @@ const T = {
   langsN:n=>`${n} idiomas`,
   more:"Ver mais cursos",loading:"A carregar o catálogo…",
   loadErr:"Não foi possível carregar o catálogo. Recarregue a página para tentar novamente.",
-  origNote:"Título e descrição no idioma original do curso.",
+  origNote:"Título e descrição traduzidos automaticamente a partir do idioma original.",
   footer:"Catálogo de formação da Factorial · Os conteúdos e a disponibilidade de idiomas podem variar.",
   close:"Fechar"},
  en:{pill:"Training · Course Catalogue",h1a:"Every course,",h1b:"in one place.",
@@ -580,6 +580,35 @@ Promise.all(CHUNKS.map(f=>fetch(f).then(r=>r.ok?r:fetch(f.split("/").pop())).the
   .then(parts=>{ parts.forEach(hydrate); ready = true; renderStatic(); renderSubs(); render(); })
   .catch(()=>{ $("#results").innerHTML = `<div class="empty">${t("loadErr")}</div>`; });
 
+</script>
+<script>
+(function(){
+  var L = new URLSearchParams(location.search).get('lang');
+  if (!L) { try { L = localStorage.getItem('cc-lang'); } catch(e) {} }
+  var TARGET = 'pt-PT';
+  function setCookie(v){ document.cookie = 'googtrans=' + v + ';path=/'; document.cookie = 'googtrans=' + v + ';path=/;domain=' + location.hostname; }
+  function clearCookie(){ var x = 'googtrans=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/'; document.cookie = x; document.cookie = x + ';domain=' + location.hostname; }
+  // Switching into or out of Portuguese reloads the page so the automatic translation turns on/off cleanly
+  document.addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('[data-lang]'); if (!b) return;
+    var nl = b.dataset.lang; if (nl === L) return;
+    if (nl === 'pt' || L === 'pt') {
+      e.preventDefault(); e.stopImmediatePropagation();
+      try { localStorage.setItem('cc-lang', nl); } catch(_) {}
+      if (nl === 'pt') setCookie('/en/' + TARGET); else clearCookie();
+      var u = new URL(location.href); u.searchParams.set('lang', nl); location.href = u.toString();
+    }
+  }, true);
+  if (L === 'pt') {
+    setCookie('/en/' + TARGET);
+    var st = document.createElement('style');
+    st.textContent = '.goog-te-banner-frame,.skiptranslate>iframe,#goog-gt-tt,.goog-te-balloon-frame,#google_translate_element{display:none!important}body{top:0!important;position:static!important}.goog-text-highlight{background:none!important;box-shadow:none!important}';
+    document.head.appendChild(st);
+    var d = document.createElement('div'); d.id = 'google_translate_element'; document.body.appendChild(d);
+    window.googleTranslateElementInit = function(){ new google.translate.TranslateElement({pageLanguage:'en', includedLanguages:TARGET, autoDisplay:false}, 'google_translate_element'); };
+    var s = document.createElement('script'); s.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit'; document.body.appendChild(s);
+  } else { clearCookie(); }
+})();
 </script>
 </body>
 </html>
