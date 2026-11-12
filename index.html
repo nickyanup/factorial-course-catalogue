@@ -599,15 +599,38 @@ Promise.all(CHUNKS.map(f=>fetch(f).then(r=>r.ok?r:fetch(f.split("/").pop())).the
       var u = new URL(location.href); u.searchParams.set('lang', nl); location.href = u.toString();
     }
   }, true);
-  if (L === 'pt') {
-    setCookie('/en/' + TARGET);
-    var st = document.createElement('style');
-    st.textContent = '.goog-te-banner-frame,.skiptranslate>iframe,#goog-gt-tt,.goog-te-balloon-frame,#google_translate_element{display:none!important}body{top:0!important;position:static!important}.goog-text-highlight{background:none!important;box-shadow:none!important}';
-    document.head.appendChild(st);
-    var d = document.createElement('div'); d.id = 'google_translate_element'; document.body.appendChild(d);
-    window.googleTranslateElementInit = function(){ new google.translate.TranslateElement({pageLanguage:'en', includedLanguages:TARGET, autoDisplay:false}, 'google_translate_element'); };
-    var s = document.createElement('script'); s.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit'; document.body.appendChild(s);
-  } else { clearCookie(); }
+  if (L !== 'pt') { clearCookie(); return; }
+
+  // Only course titles and descriptions get machine-translated; everything else is protected
+  var ALLOW = 'h3, .desc, td.t, .m-b > p, #newbar [data-open]';
+  var NEVER = '.b, .badges, .flags, .m-langs';
+  function protect(){
+    var els = document.body.getElementsByTagName('*');
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      if (el.classList.contains('notranslate')) continue;
+      var tag = el.tagName; if (tag === 'SCRIPT' || tag === 'STYLE') continue;
+      var hasText = false;
+      for (var n = el.firstChild; n; n = n.nextSibling) { if (n.nodeType === 3 && n.nodeValue.trim()) { hasText = true; break; } }
+      if (!hasText) continue;
+      if (el.closest(NEVER) || !el.closest(ALLOW)) el.classList.add('notranslate');
+    }
+  }
+  new MutationObserver(function(){ protect(); }).observe(document.documentElement, {childList:true, subtree:true});
+  document.addEventListener('DOMContentLoaded', protect); protect();
+
+  // Keep the browser tab title as it is
+  var origTitle = document.title;
+  new MutationObserver(function(){ if (document.title !== origTitle) document.title = origTitle; })
+    .observe(document.querySelector('title') || document.head, {childList:true, characterData:true, subtree:true});
+
+  setCookie('/en/' + TARGET);
+  var st = document.createElement('style');
+  st.textContent = 'body>.skiptranslate,.goog-te-banner-frame,#goog-gt-tt,.goog-te-balloon-frame,#google_translate_element,.VIpgJd-ZVi9od-aZ2wEe-wOHMyf,.VIpgJd-ZVi9od-ORHb-OEVmcd,.VIpgJd-yAWNEb-L7lbkb{display:none!important}body{top:0!important;position:static!important}.goog-text-highlight,.VIpgJd-yAWNEb-VIpgJd-fmcmS-sn54Q{background:none!important;box-shadow:none!important}';
+  document.head.appendChild(st);
+  var d = document.createElement('div'); d.id = 'google_translate_element'; document.body.appendChild(d);
+  window.googleTranslateElementInit = function(){ new google.translate.TranslateElement({pageLanguage:'en', includedLanguages:TARGET, autoDisplay:false}, 'google_translate_element'); };
+  var s = document.createElement('script'); s.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit'; document.body.appendChild(s);
 })();
 </script>
 </body>
